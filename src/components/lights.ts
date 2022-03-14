@@ -9,7 +9,7 @@ type DirectionalLightType = {
   shadowGenerator?: ShadowGenerator
 } & DirectionalLight
 
-function createLights(options: { enableShadows: boolean; scene?: Scene }) {
+function createLights(options: { enableShadows: boolean; scene: Scene }) {
   const { enableShadows = true, scene } = options
 
   const d_light: DirectionalLightType = new DirectionalLight("DirectionalLight", new Vector3(-0.3, -1, 0.4), scene)

@@ -9,7 +9,7 @@ type PointLightType = {
   shadowGenerator?: ShadowGenerator
 } & PointLight
 
-function createPointLights( options: { enableShadows: boolean; scene?: Scene } ) {
+function createPointLights( options: { enableShadows: boolean; scene: Scene } ) {
   const { enableShadows = true, scene } = options
 
   const p_light1: PointLightType = new PointLight("PointLight1", new Vector3(-10,35,10), scene)
