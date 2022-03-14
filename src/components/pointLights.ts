@@ -3,18 +3,19 @@ import { ShadowGenerator } from '@babylonjs/core/Lights/Shadows/shadowGenerator'
 import { Vector3 } from '@babylonjs/core/Maths/math.vector'
 import '@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent'
 import '@babylonjs/core/Engines/Extensions/engine.cubeTexture'
+import { Scene } from '@babylonjs/core/scene'
 
-const defaultOptions = {
-  enableShadows: true
-}
+type PointLightType = {
+  shadowGenerator?: ShadowGenerator
+} & PointLight
 
-function createPointLights(options = defaultOptions) {
-  const { enableShadows } = options
+function createPointLights( options: { enableShadows: boolean; scene?: Scene } ) {
+  const { enableShadows = true, scene } = options
 
-  const p_light1 = new PointLight("PointLight1", new Vector3(-10,35,10))
+  const p_light1: PointLightType = new PointLight("PointLight1", new Vector3(-10,35,10), scene)
   p_light1.intensity = .6
   
-  const p_light2 = new PointLight("PointLight2", new Vector3(11,35,0))
+  const p_light2: PointLightType = new PointLight("PointLight2", new Vector3(11,35,0), scene)
   p_light2.intensity = .7
   
   if(enableShadows){

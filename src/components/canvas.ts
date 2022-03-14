@@ -1,4 +1,4 @@
-function createCanvas(options) {
+function createCanvas(options: { selector: string; id: string }) {
   const { selector, id } = options
 
   if (!selector) {
@@ -6,7 +6,7 @@ function createCanvas(options) {
   }
 
   const container = document.querySelector(selector)
-  let canvas
+  let canvas: Element
   
   if(container.nodeName.toLowerCase() !== 'canvas') {
     canvas = document.createElement('canvas')
