@@ -1,8 +1,9 @@
 import { Color4 } from '@babylonjs/core/Maths/math.color'
 import { Scene } from '@babylonjs/core/scene'
 import { SceneOptimizer, SceneOptimizerOptions } from '@babylonjs/core/Misc/sceneOptimizer'
+import { Engine } from '@babylonjs/core/Engines/engine'
 
-function createScene(options) {
+function createScene(options: { engine: Engine }) {
   const { engine } = options
   const scene = new Scene(engine)
 
