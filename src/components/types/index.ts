@@ -157,3 +157,31 @@ export type OnRollResult = {
     rollId: number
     value : number
 }
+
+
+export type InitDataOptions = {
+    angularDamping: number
+    friction: number
+    gravity: number
+    linearDamping: number
+    mass: number
+    restitution: number
+    settleTimeout: number
+    size: number
+    spinForce: number
+    startingHeight: number
+    throwForce: number
+}
+
+export type InitData = { 
+    height: number
+    options: InitDataOptions
+    width: number
+}
+
+export type PhysicsConfig = {
+    assetPath?: AssetPath
+    origin?: string
+    scale?: number
+    startPosition?: number[]
+} & InitDataOptions
