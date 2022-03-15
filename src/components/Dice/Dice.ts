@@ -5,8 +5,10 @@ import { Ray } from "@babylonjs/core/Culling/ray";
 import '../../helpers/babylonFileLoader'
 import '@babylonjs/core/Meshes/instancedMesh'
 import { meshFaceIds } from './meshFaceIds';
+import { DiceConfig, DiceDefaults, DiceOptions, LoadDieOptions, LoadModelOptions } from '../types';
+import { Mesh } from '@babylonjs/core';
 
-const defaultOptions = {
+const defaultOptions: DiceDefaults = {
   assetPath: '',
   enableShadows: false,
   groupId: null,
@@ -22,22 +24,28 @@ class Dice {
   mesh = null
   result = 0
   asleep = false
-  constructor(options) {
+  config: DiceConfig;
+  id: unknown;
+  dieType: string;
+  comboKey: string;
+
+  constructor(options: DiceOptions) {
     this.config = {...defaultOptions, ...options}
     this.id = this.config.id !== undefined ? this.config.id : Date.now()
 		this.dieType = `d${this.config.sides}`
     this.comboKey = `${this.dieType}_${this.config.theme}`
 
     this.createInstance()
-    
   }
 
   createInstance() {
-    const dieInstance = this.config.scene.getMeshByName(this.comboKey).createInstance(`${this.dieType}-instance-${this.id}`)
+    //Per Frank this is a Mesh, not AbstractMesh as
+    const mesh = this.config.scene.getMeshByName(this.comboKey)
+    const dieInstance = mesh.createInstance(`${this.dieType}-instance-${this.id}`)
 
 		// start the instance under the floor, out of camera view
 		dieInstance.position.y = -100
-    dieInstance.scaling = new Vector3(this.config.scale,this.config.scale,this.config.scale)
+    dieInstance.scaling = new Vector3(this.config.scale, this.config.scale, this.config.scale)
 		
     if(this.config.enableShadows){
       for (const key in this.config.lights) {
@@ -52,7 +60,7 @@ class Dice {
   }
 
   // TODO: add themeOptions for colored materials, must ensure theme and themeOptions are unique somehow
-  static async loadDie(options) {
+  static async loadDie(options: LoadDieOptions ) {
     const { sides, theme = 'purpleRock', scene} = options
 		let dieType = 'd' + sides
     // create a key for this die type and theme combo for caching and instance creation
@@ -68,11 +76,13 @@ class Dice {
   }
 
   // load all the dice models
-  static async loadModels(options) {
-    const {assetPath, scene, scale} = options
+  static async loadModels(options: LoadModelOptions) {
+    const {assetPath, scene } = options
     const models = await SceneLoader.ImportMeshAsync(null,`${assetPath}models/`, "dice-revised.json", scene)
 
-    models.meshes.forEach(model => {
+    //Per Frank these Meshes, not Abstract meshes
+    const meshes: Mesh[] = models.meshes
+    meshes.forEach(model => {
       if(model.id === "__root__") {
         model.dispose()
       }
@@ -86,14 +96,14 @@ class Dice {
     })
   }
 
-  updateConfig(option) {
+  updateConfig(option: any) {
     this.config = {...this.config, ...option}
   }
 
   static ray = new Ray(Vector3.Zero(), Vector3.Zero(), 1)
-  static vector3 = new Vector3.Zero()
+  static vector3 = Vector3.Zero()
 
-  static setVector3(x,y,z) {
+  static setVector3(x: number,y: number,z: number) {
     return Dice.vector3.set(x,y,z)
   }
   
@@ -101,7 +111,7 @@ class Dice {
     return Dice.vector3
   }
 
-  static async getRollResult(die) {
+  static async getRollResult(die: any) {
     const getDieRoll = (d=die) => new Promise((resolve,reject) => {
 
       const dieHitbox = d.config.scene.getMeshByName(`${d.dieType}_collider`).createInstance(`${d.dieType}-hitbox-${d.id}`)

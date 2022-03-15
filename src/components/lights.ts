@@ -4,12 +4,9 @@ import { ShadowGenerator } from '@babylonjs/core/Lights/Shadows/shadowGenerator'
 import { Vector3 } from '@babylonjs/core/Maths/math.vector'
 import '@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent'
 import { Scene } from '@babylonjs/core/scene'
+import { DirectionalLightType } from './types'
 
-type DirectionalLightType = {
-  shadowGenerator?: ShadowGenerator
-} & DirectionalLight
-
-function createLights(options: { enableShadows: boolean; scene?: Scene }) {
+function createLights(options: { enableShadows: boolean; scene: Scene }) {
   const { enableShadows = true, scene } = options
 
   const d_light: DirectionalLightType = new DirectionalLight("DirectionalLight", new Vector3(-0.3, -1, 0.4), scene)
