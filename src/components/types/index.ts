@@ -1,66 +1,61 @@
 import { DirectionalLight, HemisphericLight, Mesh, Scene, ShadowGenerator } from "@babylonjs/core"
+import Dice from "../Dice"
 
-type theme = string
-type assetPath = string
+type Anustart = boolean
+type AssetPath = string
+type Theme = string
 
-export type DiceDefaults = {
-    assetPath: assetPath
-    enableShadows: boolean
-    groupId: number | null
-    id: number | null
-    lights: []
-    rollId: number | null
-    scene: Scene | null
-    sides: number
-    theme: theme
-}
+type Sides = number
+type Scale = number
+
+type DiceBuffer = ArrayBufferLike
 
 export type DiceConfig = {
-    anustart: boolean
-    assetPath: assetPath
+    anustart: Anustart
+    assetPath: AssetPath
     collectionId: number
     enableShadows: boolean
     groupId: number | null
     id: number | null
     lights: [] | Lights
     rollId: number | null
-    scale: number
-    scene: CustomScene | null
-    sides: number
-    theme: theme
+    scale: Scale
+    scene: Scene | null
+    sides: Sides
+    theme: Theme
 }
 
 export type LoadModelOptions = {
-    assetPath: assetPath
-    scale: number
-    scene: CustomScene
+    assetPath: AssetPath
+    scale: Scale
+    scene: Scene
 }
 
 export type LoadDieOptions = {
-    sides: number,
-    theme?: theme,
+    sides: Sides,
+    theme?: Theme,
     scene: CustomScene,
 }
 
-type CustomScene = {
+export type CustomScene = {
     meshes: Mesh[],
     getMeshByName: (name: string) => Mesh
 } & Scene
 
 //Passed into the new Dice class
 export type DiceOptions = {
-    anustart: boolean
-    assetPath: assetPath
+    anustart: Anustart
+    assetPath: AssetPath
     collectionId: number
     enableShadows: boolean
     groupId: number
     id: number
     lights: Lights
     rollId: number
-    scale: number
-    scene: CustomScene
-    sides: number
-    theme: theme
+    scale: Scale
+    scene: Scene
+    sides: Sides
+    theme: Theme
 }
 
 export type DirectionalLightType = {
@@ -92,4 +87,66 @@ export type DiceBoxConfig = {
     enableShadows: boolean
     lights?: Lights
     scene?: Scene
+}
+
+export type DiceBoxCreateOptions = {
+    aspect: number
+}
+
+export type OnMessage = { 
+    data: { 
+        action: string
+        diceBuffer?: DiceBuffer
+        options?: { 
+             width: number
+             height: number 
+        }; 
+        id?: number
+        theme?: Theme
+        port?: PhysicsWorkerPort
+        die?: Dice
+        rollId?: number
+    } 
+}
+
+export type PhysicsWorkerPort = { 
+    postMessage: (
+        arg0: {
+            action: string
+            diceBuffer?: DiceBuffer
+            anustart?: Anustart
+            sides?: Sides
+            scale?: Scale
+            id?: number
+            options?: unknown
+        }, 
+        arg1?: ArrayBufferLike[]
+    ) => void;
+    onmessage: (e: OnMessage) => void
+}
+
+export type Resize = {
+    height: number
+    width: number
+}
+
+export type InitSceneData = { 
+    action: string
+    diceBuffer?: DiceBuffer
+    options: Resize & DiceOptions
+    id?: number
+    theme?: string
+    port?: PhysicsWorkerPort
+    canvas?: HTMLCanvasElement
+    width?: number
+    height?: number 
+}
+
+export type WorldOffScreenOptions = { 
+    canvas: {
+        transferControlToOffscreen: () => OffscreenCanvas
+    } & HTMLCanvasElement,
+    options: {
+
+    }
 }

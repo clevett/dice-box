@@ -4,7 +4,7 @@ import { Engine } from '@babylonjs/core/Engines/engine';
 import { Scene } from '@babylonjs/core/scene';
 
 // this module has dynamically loaded modules so it's been made async
-function createCamera(options: { engine?: Engine; scene: Scene }) {
+function createCamera(options: { engine?: Engine; scene?: Scene }) {
   const { scene } = options
   const cameraDistance = 36.5
   let camera = new TargetCamera("TargetCamera1", new Vector3(0, cameraDistance, 0), scene)

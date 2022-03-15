@@ -5,18 +5,18 @@ function createCanvas(options: { selector: string; id: string }) {
     throw(new Error("You must provide a selector in order to render the Dice Box"))
   }
 
-  const container = document.querySelector(selector)
-  let canvas: Element
+  const container: Element | HTMLCanvasElement = document.querySelector(selector)
+  let canvas: HTMLCanvasElement
   
   if(container.nodeName.toLowerCase() !== 'canvas') {
     canvas = document.createElement('canvas')
     canvas.id = id
     container.appendChild(canvas)
+
+    return canvas
   } 
-  else {
-    canvas = container
-  }
-  return canvas
+
+  return container
 }
 
 export { createCanvas }

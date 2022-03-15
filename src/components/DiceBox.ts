@@ -4,7 +4,7 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode'
 import { Vector3 } from '@babylonjs/core/Maths/math.vector'
 import { ShadowOnlyMaterial } from '@babylonjs/materials/shadowOnly/shadowOnlyMaterial'
-import { DiceBoxConfig, DiceBoxDefaultOptions, DiceBoxOptions } from './types'
+import { DiceBoxConfig, DiceBoxCreateOptions, DiceBoxDefaultOptions, DiceBoxOptions } from './types'
 
 const defaultOptions: DiceBoxDefaultOptions = {
   aspect: 300 / 150,
@@ -20,7 +20,7 @@ class DiceBox {
 		this.config = {...defaultOptions, ...options}
 		this.create()
 	}
-	create(options?: DiceBoxOptions){
+	create(options?: DiceBoxCreateOptions){
 		// remove any previously existing boxes
 		this.destroy()
 		// extend config with options on create

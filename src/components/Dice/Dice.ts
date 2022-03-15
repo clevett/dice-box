@@ -5,10 +5,9 @@ import { Ray } from "@babylonjs/core/Culling/ray";
 import '../../helpers/babylonFileLoader'
 import '@babylonjs/core/Meshes/instancedMesh'
 import { meshFaceIds } from './meshFaceIds';
-import { DiceConfig, DiceDefaults, DiceOptions, LoadDieOptions, LoadModelOptions } from '../types';
-import { Mesh } from '@babylonjs/core';
+import { DiceConfig, DiceOptions, LoadModelOptions } from '../types';
 
-const defaultOptions: DiceDefaults = {
+const defaultOptions = {
   assetPath: '',
   enableShadows: false,
   groupId: null,
@@ -25,9 +24,12 @@ class Dice {
   result = 0
   asleep = false
   config: DiceConfig;
-  id: unknown;
+  id: number;
   dieType: string;
   comboKey: string;
+	d10Instance: Dice;
+	dieParent: Dice;
+	value: number;
 
   constructor(options: DiceOptions) {
     this.config = {...defaultOptions, ...options}
@@ -60,7 +62,7 @@ class Dice {
   }
 
   // TODO: add themeOptions for colored materials, must ensure theme and themeOptions are unique somehow
-  static async loadDie(options: LoadDieOptions ) {
+  static async loadDie(options: DiceOptions ) {
     const { sides, theme = 'purpleRock', scene} = options
 		let dieType = 'd' + sides
     // create a key for this die type and theme combo for caching and instance creation
@@ -81,7 +83,7 @@ class Dice {
     const models = await SceneLoader.ImportMeshAsync(null,`${assetPath}models/`, "dice-revised.json", scene)
 
     //Per Frank these Meshes, not Abstract meshes
-    const meshes: Mesh[] = models.meshes
+    const meshes = models.meshes
     meshes.forEach(model => {
       if(model.id === "__root__") {
         model.dispose()
