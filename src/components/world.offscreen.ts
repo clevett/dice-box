@@ -104,7 +104,7 @@ class WorldOffScreen {
 		this.#OffscreenWorker.postMessage({action: "addDie", options})
 	}
 
-	remove(options: Resize){
+	remove(options: DiceOptions){
 		// remove the die from the render
 		this.#OffscreenWorker.postMessage({action: "removeDie", options})
 	}

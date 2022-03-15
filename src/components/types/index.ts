@@ -69,7 +69,7 @@ export type Lights = {
 
 export type DiceBoxOptions = {
     aspect: number
-    enableDebugging: boolean
+    enableDebugging?: boolean
     enableShadows: boolean
     lights: Lights
     scene: Scene
@@ -145,8 +145,13 @@ export type InitSceneData = {
 export type WorldOffScreenOptions = { 
     canvas: {
         transferControlToOffscreen: () => OffscreenCanvas
-    } & HTMLCanvasElement,
+    } & HTMLCanvasElement
     options: {
 
     }
+}
+
+export type InitSceneConfig = {
+    canvas: HTMLCanvasElement
+    options: unknown
 }

@@ -6,32 +6,35 @@ import { createLights } from './lights'
 import DiceBox from './DiceBox'
 import Dice from './Dice'
 import { loadTheme } from './Dice/themes'
+import { InitSceneConfig, Lights, PhysicsWorkerPort } from './types'
+import { Engine, Scene, TargetCamera } from '@babylonjs/core'
 
 class WorldOnscreen {
 	config
-	initialized = false
-	#dieCache = {}
+	initialized: boolean | Promise<void> = false
+	#dieCache: { [key: number]: Dice } = {}
 	#count = 0
 	#sleeperCount = 0
 	#dieRollTimer = []
-	#canvas
-	#engine
-	#scene
-	#camera
-	#lights
-	#diceBox
-	#physicsWorkerPort
-	onInitComplete = () => {}
-	onRollResult = () => {}
-	onRollComplete = () => {}
+	#canvas: HTMLCanvasElement
+	#engine: Engine
+	#scene: Scene
+	#camera: TargetCamera
+	#lights: Lights
+	#diceBox: DiceBox
+	#physicsWorkerPort: PhysicsWorkerPort
+	onInitComplete = (arg: boolean) => {} // init callback
+	onRollResult = (arg: Dice) => {} // individual die callback
+	onRollComplete = () => {} // roll group callback
+	onDieRemoved = (arg: number) => {}
 	diceBufferView = new Float32Array(8000)
 
-	constructor(options){
+	constructor(options: InitSceneConfig){
 		this.initialized = this.initScene(options)
 	}
 	
 	// initialize the babylon scene
-	async initScene(config) {
+	async initScene(config: { canvas: HTMLCanvasElement; options: unknown }) {
 		this.#canvas  = config.canvas
 	
 		// set the config from World
@@ -71,12 +74,12 @@ class WorldOnscreen {
 		// return true
 	}
 
-	connect(port){
+	connect(port: PhysicsWorkerPort){
 		this.#physicsWorkerPort = port
 		this.#physicsWorkerPort.onmessage = (e) => {
         switch (e.data.action) {
           case "updates": // dice status/position updates from physics worker
-						this.updatesFromPhysics(e.data.diceBuffer)
+			this.updatesFromPhysics(e.data.diceBuffer)
             break;
         
           default:
@@ -93,7 +96,7 @@ class WorldOnscreen {
 		if(prevConfig.enableShadows !== this.config.enableShadows) {
 			// regenerate the lights
 			Object.values(this.#lights ).forEach(light => light.dispose())
-			this.#lights  = createLights({enableShadows: this.config.enableShadows})
+			this.#lights = createLights({enableShadows: this.config.enableShadows})
 		}
 		if(prevConfig.scale !== this.config.scale) {
 			Object.values(this.#dieCache).forEach(({mesh}) => {
@@ -220,37 +223,37 @@ class WorldOnscreen {
 	
 	}
 	
-	remove(data) {
-	// TODO: test this with exploding dice
-	const dieData = this.#dieCache[data.id]
-	
-	// check if this is d100 and remove associated d10 first
-	if(dieData.hasOwnProperty('d10Instance')){
+	remove(data: { id: string | number; rollId: number }) {
+		// TODO: test this with exploding dice
+		const dieData = this.#dieCache[data.id]
+		
+		// check if this is d100 and remove associated d10 first
+		if(dieData.hasOwnProperty('d10Instance')){
+			// remove die
+			this.#dieCache[dieData.d10Instance.id].mesh.dispose()
+			// delete entry
+			delete this.#dieCache[dieData.d10Instance.id]
+			// remove physics body
+			this.#physicsWorkerPort.postMessage({
+				action: "removeDie",
+				id: dieData.d10Instance.id
+		})
+			// decrement count
+			this.#sleeperCount--
+		}
+
 		// remove die
-		this.#dieCache[dieData.d10Instance.id].mesh.dispose()
+		this.#dieCache[data.id].mesh.dispose()
 		// delete entry
-		delete this.#dieCache[dieData.d10Instance.id]
-		// remove physics body
-		physicsWorkerPort.postMessage({
-			action: "removeDie",
-			id: dieData.d10Instance.id
-    })
+		delete this.#dieCache[data.id]
 		// decrement count
 		this.#sleeperCount--
+
+		// step the animation forward
+		this.#scene.render()
+
+		this.onDieRemoved(data.rollId)
 	}
-
-	// remove die
-	this.#dieCache[data.id].mesh.dispose()
-	// delete entry
-	delete this.#dieCache[data.id]
-	// decrement count
-	this.#sleeperCount--
-
-	// step the animation forward
-	this.#scene.render()
-
-	this.onDieRemoved(data.rollId)
-}
 	
 	updatesFromPhysics(buffer) {
 		this.diceBufferView = new Float32Array(buffer)

@@ -257,7 +257,7 @@ const _add = async (options: DiceOptions) => {
 
 }
 
-const remove = (data: Resize & DiceOptions) => {
+const remove = (data: DiceOptions) => {
 	// TODO: test this with exploding dice
 	// check if this is d100 and remove associated d10 first
 	const dieData = dieCache[data.id]
