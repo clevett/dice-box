@@ -1,9 +1,10 @@
 import { Color3 } from '@babylonjs/core/Maths/math.color'
 import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder'
+import { ShadowOnlyMaterial } from '@babylonjs/materials/shadowOnly/shadowOnlyMaterial'
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode'
 import { Vector3 } from '@babylonjs/core/Maths/math.vector'
-import { ShadowOnlyMaterial } from '@babylonjs/materials/shadowOnly/shadowOnlyMaterial'
+
 import { DiceBoxConfig, DiceBoxCreateOptions, DiceBoxDefaultOptions, DiceBoxOptions } from './types'
 
 const defaultOptions: DiceBoxDefaultOptions = {

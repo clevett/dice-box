@@ -1,13 +1,13 @@
-import { Vector3 } from '@babylonjs/core/Maths/math'
-import { createEngine } from './engine'
-import { createScene } from './scene'
 import { createCamera } from './camera'
+import { createEngine } from './engine'
 import { createLights } from './lights'
-import DiceBox from './DiceBox'
-import Dice from './Dice'
-import { loadTheme } from './Dice/themes'
-import { InitSceneConfig, Lights, PhysicsWorkerPort } from './types'
+import { createScene } from './scene'
 import { Engine, Scene, TargetCamera } from '@babylonjs/core'
+import { InitSceneConfig, Lights, OnRollResult, PhysicsWorkerPort } from './types'
+import { loadTheme } from './Dice/themes'
+import { Vector3 } from '@babylonjs/core/Maths/math'
+import Dice from './Dice'
+import DiceBox from './DiceBox'
 
 class WorldOnscreen {
 	config
@@ -24,7 +24,7 @@ class WorldOnscreen {
 	#diceBox: DiceBox
 	#physicsWorkerPort: PhysicsWorkerPort
 	onInitComplete = (arg: boolean) => {} // init callback
-	onRollResult = (arg: Dice) => {} // individual die callback
+	onRollResult = (arg: OnRollResult) => {} // individual die callback
 	onRollComplete = () => {} // roll group callback
 	onDieRemoved = (arg: number) => {}
 	diceBufferView = new Float32Array(8000)
@@ -298,7 +298,7 @@ class WorldOnscreen {
 	}
 	
 	// handle the position updates from the physics worker. It's a simple flat array of numbers for quick and easy transfer
-	async handleAsleep(die){
+	async handleAsleep(die: Dice){
 		// mark this die as asleep
 		die.asleep = true
 	

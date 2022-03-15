@@ -82,12 +82,9 @@ export type DiceBoxDefaultOptions = {
 }
 
 export type DiceBoxConfig = {
-    aspect: number
-    enableDebugging: boolean
-    enableShadows: boolean
     lights?: Lights
     scene?: Scene
-}
+} & DiceBoxDefaultOptions
 
 export type DiceBoxCreateOptions = {
     aspect: number
@@ -154,4 +151,9 @@ export type WorldOffScreenOptions = {
 export type InitSceneConfig = {
     canvas: HTMLCanvasElement
     options: unknown
+}
+
+export type OnRollResult = {
+    rollId: number
+    value : number
 }
