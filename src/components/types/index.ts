@@ -71,3 +71,25 @@ export type Lights = {
     directional: DirectionalLightType, 
     hemispheric: HemisphericLight
 }
+
+export type DiceBoxOptions = {
+    aspect: number
+    enableDebugging: boolean
+    enableShadows: boolean
+    lights: Lights
+    scene: Scene
+}
+
+export type DiceBoxDefaultOptions = {
+    aspect: number
+    enableDebugging: boolean
+    enableShadows: boolean
+}
+
+export type DiceBoxConfig = {
+    aspect: number
+    enableDebugging: boolean
+    enableShadows: boolean
+    lights?: Lights
+    scene?: Scene
+}
