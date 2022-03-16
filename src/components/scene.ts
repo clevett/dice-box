@@ -7,7 +7,6 @@ function createScene(options: { engine: Engine }) {
   const { engine } = options
   const scene = new Scene(engine)
 
-  // scene.useRightHandedSystem = true
   scene.clearColor = new Color4(0,0,0,0);
 
   scene.pointerMovePredicate = () => false;

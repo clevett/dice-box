@@ -6,24 +6,29 @@ import DiceBox from './DiceBox'
 import Dice from './Dice'
 import { loadTheme } from './Dice/themes'
 import { Vector3 } from '@babylonjs/core/Maths/math'
+import { Engine, Scene, TargetCamera } from '@babylonjs/core'
+import { DiceOptions, InitSceneData, Lights, OnMessage, PhysicsWorkerPort, Resize } from './types'
 
 let 
-	config,
-	dieCache = {},
+	config: {
+		origin?: string
+		delay?: number
+	} & Resize & DiceOptions,
+	dieCache: { [key: number]: Dice } = {},
 	count = 0,
 	sleeperCount = 0,
 	dieRollTimer = [],
-	canvas, 
-	engine, 
-	scene, 
-	camera,
-	lights,
-	diceBox,
-	physicsWorkerPort,
+	canvas: HTMLCanvasElement, 
+	engine: Engine, 
+	scene: Scene, 
+	camera: TargetCamera,
+	lights: Lights,
+	diceBox: DiceBox,
+	physicsWorkerPort: PhysicsWorkerPort,
 	diceBufferView = new Float32Array(8000)
 
 // these are messages sent to this worker from World.js
-self.onmessage = (e) => {
+self.onmessage = (e: { data: InitSceneData }) => {
   switch( e.data.action ) {
     case "rollDie":
       // kick it over to the physics worker
@@ -35,7 +40,7 @@ self.onmessage = (e) => {
 			add({...e.data.options})
       break
 		case "loadTheme":
-			loadThemes(e.data.id,e.data.theme)
+			loadThemes(e.data.id, e.data.theme)
 			break
     case "clearDice":
 			clear()
@@ -54,10 +59,10 @@ self.onmessage = (e) => {
 			break
     case "connect": // These are messages sent from physics.worker.js
       physicsWorkerPort = e.data.port
-      physicsWorkerPort.onmessage = (e) => {
+      physicsWorkerPort.onmessage = (e: OnMessage) => {
         switch (e.data.action) {
           case "updates": // dice status/position updates from physics worker
-						updatesFromPhysics(e.data.diceBuffer)
+				updatesFromPhysics(e.data.diceBuffer)
             break;
         
           default:
@@ -72,7 +77,7 @@ self.onmessage = (e) => {
 }
 
 // initialize the babylon scene
-const initScene = async (data) => {
+const initScene = async (data: InitSceneData) => {
 	canvas = data.canvas
 
 	// set the config from World
@@ -82,22 +87,22 @@ const initScene = async (data) => {
 
 	// setup babylonJS scene
 	engine = createEngine(canvas)
-  scene = createScene({engine})
-  camera = createCamera({engine})
-  lights = createLights({enableShadows: config.enableShadows})
+	scene = createScene({engine})
+	camera = createCamera({engine})
+	lights = createLights({enableShadows: config.enableShadows})
 
   // create the box that provides surfaces for shadows to render on
 	diceBox = new DiceBox({
 		enableShadows: config.enableShadows,
-    aspect: canvas.width / canvas.height,
-    lights,
+    	aspect: canvas.width / canvas.height,
+    	lights,
 		scene,
 		enableDebugging: false
 	})
 
   // loading all our dice models
   // we use to load these models individually as needed, but it's faster to load them all at once and prevents animation jank when rolling
-  await Dice.loadModels({
+  	await Dice.loadModels({
 		assetPath: config.origin + config.assetPath,
 		scene,
 		scale: config.scale
@@ -112,7 +117,7 @@ const initScene = async (data) => {
   self.postMessage({action:"init-complete"})
 }
 
-const updateConfig = (options) => {
+const updateConfig = (options: Resize & DiceOptions) => {
 	const prevConfig = config
 	config = options
 	// check if shadows setting has changed
@@ -128,7 +133,7 @@ const updateConfig = (options) => {
 }
 
 // all this does is start the render engine.
-const render = (anustart) => {
+const render = (anustart: boolean) => {
   // document.body.addEventListener('click',()=>engine.stopRenderLoop())
   engine.runRenderLoop(renderLoop.bind(self))
 	physicsWorkerPort.postMessage({
@@ -158,7 +163,7 @@ const renderLoop = () => {
   }
 }
 
-const loadThemes = async (id,theme) => {
+const loadThemes = async (id: number, theme: string) => {
 	await loadTheme(theme, config.origin + config.assetPath, scene)
 	self.postMessage({action:"theme-loaded",id})
 }
@@ -183,10 +188,9 @@ const clear = () => {
 
 	// step the animation forward
 	scene.render()
-
 }
 
-const add = (options) => {
+const add = (options: DiceOptions) => {
 	// loadDie allows you to specify sides(dieType) and theme and returns the options you passed in
 	Dice.loadDie({
 		...options,
@@ -200,7 +204,7 @@ const add = (options) => {
 }
 
 // add a die to the scene
-const _add = async (options) => {
+const _add = async (options: DiceOptions) => {
 	if(engine.activeRenderLoops.length === 0) {
 		render(options.anustart)
 	}
@@ -230,7 +234,9 @@ const _add = async (options) => {
   // for d100's we need to add an additional d10 and pair it up with the d100 just created
   if(options.sides === 100) {
     // assign the new die to a property on the d100 - spread the options in order to pass a matching theme
-    newDie.d10Instance = await Dice.loadDie({...diceOptions, sides: 10, id: newDie.id + 10000}).then( response =>  {
+    newDie.d10Instance = await Dice.loadDie(
+		{...diceOptions, sides: 10, id: newDie.id + 10000}
+	).then( response =>  {
       const d10Instance = new Dice(response)
       // identify the parent of this d10 so we can calculate the roll result later
       d10Instance.dieParent = newDie
@@ -251,7 +257,7 @@ const _add = async (options) => {
 
 }
 
-const remove = (data) => {
+const remove = (data: DiceOptions) => {
 	// TODO: test this with exploding dice
 	// check if this is d100 and remove associated d10 first
 	const dieData = dieCache[data.id]
@@ -278,7 +284,7 @@ const remove = (data) => {
 	self.postMessage({action:"die-removed", rollId: data.rollId})
 }
 
-const updatesFromPhysics = (buffer) => {
+const updatesFromPhysics = (buffer: ArrayBufferLike) => {
 	diceBufferView = new Float32Array(buffer)
 	let bufferIndex = 1
 
@@ -320,7 +326,7 @@ const updatesFromPhysics = (buffer) => {
 	})
 }
 
-const handleAsleep = async (die) => {
+const handleAsleep = async (die: Dice) => {
 	// mark this die as asleep
 	die.asleep = true
 
@@ -362,7 +368,7 @@ const handleAsleep = async (die) => {
 	sleeperCount++
 }
 
-const resize = (data) => {
+const resize = (data: Resize) => {
 	canvas.width = data.width
 	canvas.height = data.height
 	// redraw the dicebox

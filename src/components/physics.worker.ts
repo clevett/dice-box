@@ -1,12 +1,13 @@
 import { lerp } from '../helpers'
 import AmmoJS from "../ammo/ammo.wasm.es.js"
+import { InitData, InitDataOptions, PhysicsConfig } from './types'
 
 // Firefox limitation: https://github.com/vitejs/vite/issues/4586
 
 // there's probably a better place for these variables
 let bodies = []
 let sleepingBodies = []
-let colliders = {}
+let colliders: { [key: number]: typeof Ammo } = {}
 let physicsWorld
 let Ammo
 let worldWorkerPort
@@ -19,21 +20,21 @@ let stopLoop = false
 let spinScale = 60
 
 const defaultOptions = {
-	size: 9.5,
-	startingHeight: 12,
-	spinForce: 3,
-	throwForce: 2,
-	gravity: 1,
-	mass: 1,
-	friction: .8,
-	restitution: .1,
-	linearDamping: .4,
 	angularDamping: .4,
+	friction: .8,
+	gravity: 1,
+	linearDamping: .4,
+	mass: 1,
+	restitution: .1,
 	settleTimeout: 5000,
+	size: 9.5,
+	spinForce: 3,
+	startingHeight: 12,
+	throwForce: 2,
 	// TODO: toss: "center", "edge", "allEdges"
 }
 
-let config = {...defaultOptions}
+let config: PhysicsConfig = { ...defaultOptions }
 
 let emptyVector
 let diceBufferView
@@ -51,34 +52,34 @@ self.onmessage = (e) => {
       })
       break
     case "clearDice":
-			clearDice(e.data)
-      break
-		case "removeDie":
-			removeDie(e.data.id)
-			break;
-		case "resize":
-			width = e.data.width
-			height = e.data.height
-			aspect = width / height
-			addBoxToWorld(config.size, config.startingHeight + 10)
-			break
-		case "updateConfig":
-			updateConfig(e.data.options)
-			break
+		clearDice()
+      	break
+	case "removeDie":
+		removeDie(e.data.id)
+		break;
+	case "resize":
+		width = e.data.width
+		height = e.data.height
+		aspect = width / height
+		addBoxToWorld(config.size, config.startingHeight + 10)
+		break
+	case "updateConfig":
+		updateConfig(e.data.options)
+		break
     case "connect":
       worldWorkerPort = e.ports[0]
       worldWorkerPort.onmessage = (e) => {
         switch (e.data.action) {
-					case "initBuffer":
-						diceBufferView = new Float32Array(e.data.diceBuffer)
-						diceBufferView[0] = -1
-						break;
+			case "initBuffer":
+				diceBufferView = new Float32Array(e.data.diceBuffer)
+				diceBufferView[0] = -1
+				break;
           case "addDie":
-						// toss from all edges
-						// setStartPosition()
-						if(e.data.anustart){
-							setStartPosition()
-						}
+				// toss from all edges
+				// setStartPosition()
+				if(e.data.anustart){
+					setStartPosition()
+				}
             addDie(e.data.sides, e.data.id)
             break;
           case "rollDie":
@@ -115,12 +116,12 @@ self.onmessage = (e) => {
 
 // runs when the worker loads to set up the Ammo physics world and load our colliders
 // loaded colliders will be cached and added to the world in a later post message
-const init = async (data) => {
+const init = async (data: InitData) => {
 	width = data.width
 	height = data.height
 	aspect = width / height
 
-	config = {...config,...data.options}
+	config = {...config, ...data.options}
 	config.gravity === 0 ? 0 : config.gravity + config.mass / 3
 	config.mass = 1 + config.mass / 3
 	config.spinForce = config.spinForce/spinScale
@@ -141,7 +142,7 @@ const init = async (data) => {
 	sharedVector3 = new Ammo.btVector3(0, 0, 0)
 	emptyVector = setVector3(0,0,0)
 
-	setStartPosition(aspect)
+	setStartPosition()
 	
 	// load our collider data
 	// perhaps we don't await this, let it run and resolve it later
@@ -186,7 +187,7 @@ const init = async (data) => {
 
 }
 
-const updateConfig = (options) => {
+const updateConfig = (options: InitDataOptions) => {
 	config = {...config,...options}
 	config.mass = 1 + config.mass / 3
 	config.gravity = config.gravity === 0 ? 0 : config.gravity + config.mass / 3
@@ -215,20 +216,11 @@ const setStartPosition = () => {
 	let xMax = size * aspect / -2 + edgeOffset
 	let yMin = size / 2 - edgeOffset
 	let yMax = size / -2 + edgeOffset
-	// let xEnvelope = lerp(envelopeSize * aspect - edgeOffset * aspect, -envelopeSize * aspect + edgeOffset * aspect, Math.random())
 	let xEnvelope = lerp(xMin, xMax, Math.random())
 	let yEnvelope = lerp(yMin, yMax, Math.random())
 	let tossFromTop = Math.round(Math.random())
 	let tossFromLeft = Math.round(Math.random())
 	let tossX = Math.round(Math.random())
-	// console.log(`throw coming from`, tossX ? tossFromTop ? "top" : "bottom" : tossFromLeft ? "left" : "right")
-
-	// forces = {
-	// 	xMinForce: tossX ? -config.throwForce * aspect : tossFromLeft ? config.throwForce * aspect * .3 : -config.throwForce * aspect * .3,
-	// 	xMaxForce: tossX ? config.throwForce * aspect : tossFromLeft ? config.throwForce * aspect * 1 : -config.throwForce * aspect * 1,
-	// 	zMinForce: tossX ? tossFromTop ? config.throwForce * .3 : -config.throwForce * .3 : -config.throwForce,
-	// 	zMaxForce: tossX ? tossFromTop ? config.throwForce * 1 : -config.throwForce * 1 : config.throwForce,
-	// }
 
 	config.startPosition = [
 		// tossing on x axis then z should be locked to top or bottom
@@ -241,7 +233,7 @@ const setStartPosition = () => {
 	// console.log(`startPosition`, config.startPosition)
 }
 
-const createConvexHull = (mesh) => {
+const createConvexHull = (mesh: { positions: string | any[]; scaling: number[] }) => {
 	const convexMesh = new Ammo.btConvexHullShape()
 
 	let count = mesh.positions.length

@@ -1,30 +1,34 @@
 import { Color3 } from '@babylonjs/core/Maths/math.color'
 import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder'
+import { ShadowOnlyMaterial } from '@babylonjs/materials/shadowOnly/shadowOnlyMaterial'
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode'
 import { Vector3 } from '@babylonjs/core/Maths/math.vector'
-import { ShadowOnlyMaterial } from '@babylonjs/materials/shadowOnly/shadowOnlyMaterial'
 
-const defaultOptions = {
+import { DiceBoxConfig, DiceBoxCreateOptions, DiceBoxDefaultOptions, DiceBoxOptions } from '../types'
+
+const defaultOptions: DiceBoxDefaultOptions = {
   aspect: 300 / 150,
   enableDebugging: false,
   enableShadows: true,
 }
 
-class DiceBox{
+class DiceBox {
 	size = 9.5
-	constructor(options){
+	config: DiceBoxConfig
+	box: TransformNode
+	constructor(options: DiceBoxOptions){
 		this.config = {...defaultOptions, ...options}
 		this.create()
 	}
-	create(options){
+	create(options?: DiceBoxCreateOptions){
 		// remove any previously existing boxes
 		this.destroy()
 		// extend config with options on create
 		Object.assign(this.config,options)
 		const { aspect, enableDebugging = true, enableShadows } = this.config
 		const wallHeight = 30
-		let boxMaterial
+		let boxMaterial: StandardMaterial | ShadowOnlyMaterial
 
 		this.box = new TransformNode("diceBox");
 
@@ -35,10 +39,7 @@ class DiceBox{
 		}
 		else {
 			if(enableShadows) {
-				boxMaterial = new ShadowOnlyMaterial('shadowOnly',this.config.scene)
-				// boxMaterial.alpha = 1
-				// boxMaterial.diffuseColor = new Color3(1, 1, 1)
-				// boxMaterial.activeLight = lights.directional
+				boxMaterial = new ShadowOnlyMaterial('shadowOnly', this.config.scene)
 			} 
 		}
 
