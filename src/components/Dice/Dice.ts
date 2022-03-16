@@ -5,7 +5,7 @@ import { Ray } from "@babylonjs/core/Culling/ray";
 import '../../helpers/babylonFileLoader'
 import '@babylonjs/core/Meshes/instancedMesh'
 import { meshFaceIds } from './meshFaceIds';
-import { DiceConfig, DiceOptions, LoadModelOptions } from '../types';
+import { DiceConfig, DiceOptions, LoadModelOptions } from '../../types';
 
 const defaultOptions = {
   assetPath: '',

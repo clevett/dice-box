@@ -1,12 +1,13 @@
 import { createCanvas } from './components/canvas'
-// import WorldOffscreen from './components/world.offscreen'
+//@ts-expect-error vits will take care of this
 import physicsWorker from './components/physics.worker.js?worker&inline'
 import { debounce } from './helpers'
+import { CollectionOptions, DiceRoll, Roll, RollGroup, WorldConfig } from './types'
 
 const defaultOptions = {
 	id: `dice-canvas-${Date.now()}`, // set the canvas id
-  enableShadows: true, // do dice cast shadows onto DiceBox mesh?
-  delay: 10, // delay between dice being generated - 0 causes stuttering and physics popping
+  	enableShadows: true, // do dice cast shadows onto DiceBox mesh?
+  	delay: 10, // delay between dice being generated - 0 causes stuttering and physics popping
 	gravity: 2, // note: high gravity will cause dice piles to jiggle
 	startingHeight: 8, // height to drop the dice from - will not exceed the DiceBox height set by zoom
 	spinForce: 4, // passed on to physics as an impulse force
@@ -19,8 +20,8 @@ const defaultOptions = {
 }
 
 class World {
-	rollCollectionData = {}
-	rollGroupData = {}
+	rollCollectionData: { [key: number]: Collection } = {}
+	rollGroupData: { [key: number]: RollGroup} = {}
 	rollDiceData = {}
 	themeData = []
 	#collectionIndex = 0
@@ -31,20 +32,21 @@ class World {
 	diceWorldInit
 	#DiceWorker
 	diceWorkerInit
-	onDieComplete = () => {}
-	onRollComplete = () => {}
-	onRemoveComplete = () => {}
+	onDieComplete = (arg: unknown) => {}
+	onRollComplete = (arg: unknown) => {}
+	onRemoveComplete = (arg: unknown) => {}
+	config: WorldConfig
+	canvas: HTMLCanvasElement
 
-  constructor(container, options = {}){
+	constructor(container: string, options = {}){
 		// extend defaults with options
 		this.config = {...defaultOptions, ...options}
 		// if a canvas selector is provided then that will be used for the dicebox, otherwise a canvas will be created using the config.id
-    this.canvas = createCanvas({
-      selector: container,
-      id: this.config.id
-    })
-
-  }
+		this.canvas = createCanvas({
+			selector: container,
+			id: this.config.id
+		})
+	}
 
 	async #loadWorld(){
 		if ("OffscreenCanvas" in window && "transferControlToOffscreen" in this.canvas && this.config.offscreen) { 
@@ -112,7 +114,7 @@ class World {
 			this.diceWorldInit()
 		}
 		// now that DiceWorld is ready we can attach our callbacks
-		this.#DiceWorld.onRollResult = (result) => {
+		this.#DiceWorld.onRollResult = (result: DiceRoll) => {
 			const die = this.rollDiceData[result.rollId]
 			const group = this.rollGroupData[die.groupId]
 			const collection = this.rollCollectionData[die.collectionId]
@@ -126,7 +128,9 @@ class World {
 			// if all rolls are completed then resolve the collection promise - returning dice that were in this collection
 			if(collection.completedRolls == collection.rolls.length) {
 				// pull out roll.collectionId and roll.id? They're meant to be internal values
-				collection.resolve(Object.values(collection.rolls).map(({collectionId, id, ...rest}) => rest))
+				collection.resolve(
+					Object.values(collection.rolls).map(({collectionId, id, ...rest}) => rest)
+				)
 			}
 
 			// trigger callback passing individual die result
@@ -138,7 +142,7 @@ class World {
 			this.onRollComplete(this.getRollResults())
 		}
 
-		this.#DiceWorld.onDieRemoved = (rollId) => {
+		this.#DiceWorld.onDieRemoved = (rollId: number) => {
 			// get die information from cache
 			let die = this.rollDiceData[rollId]
 			const collection = this.rollCollectionData[die.removeCollectionId]
@@ -212,13 +216,13 @@ class World {
 		this.#rollIndex = 0
 		this.#idIndex = 0
 		// reset internal data objects
-		this.rollCollectionData = {}
+		this.rollCollectionData = []
 		this.rollGroupData = {}
 		this.rollDiceData = {}
 		// clear all rendered die bodies
 		this.#DiceWorld.clear()
-    // clear all physics die bodies
-    this.#DiceWorker.postMessage({action: "clearDice"})
+		// clear all physics die bodies
+		this.#DiceWorker.postMessage({action: "clearDice"})
 
 		// make this method chainable
 		return this
@@ -338,7 +342,7 @@ class World {
 		let anustart = collection.anustart
 
 		// loop through the number of dice in the group and roll each one
-		parsedNotation.forEach(async notation => {
+		parsedNotation.forEach(async (notation: RollGroup) => {
 			const theme = notation.theme || collection.theme || this.config.theme
 			const rolls = {}
 			const hasGroupId = notation.groupId !== undefined
@@ -356,11 +360,11 @@ class World {
 				index = hasGroupId ? notation.groupId : this.#groupIndex
 
 				const roll = {
-					sides: notation.sides,
-					groupId: index,
 					collectionId: collection.id,
-					rollId,
+					groupId: index,
 					id,
+					rollId,
+					sides: notation.sides,
 					theme
 				}
 
@@ -372,7 +376,6 @@ class World {
 
 				// turn flag off
 				anustart = false
-
 			}
 
 			if(hasGroupId) {
@@ -484,7 +487,7 @@ class World {
     }
   }
 
-	#parseGroup(groupId) {
+	#parseGroup(groupId: number) {
 		// console.log('groupId', groupId)
 		const rollGroup = this.rollGroupData[groupId]
 		// turn object into an array
@@ -505,8 +508,9 @@ class World {
 	getRollResults(){
 		// loop through each roll group
 		return Object.entries(this.rollGroupData).map(([key,val]) => {
+			const number = Number(key)
 			// parse the group data to get the value and the rolls as an array
-			const groupData = this.#parseGroup(key)
+			const groupData = this.#parseGroup(number)
 			// set the value for this roll group in this.rollGroupData
 			val.value = groupData.value
 			// set the qty equal to the number of rolls - this can be changed by rerolls and removals
@@ -521,8 +525,17 @@ class World {
 	}
 }
 
-class Collection{
-	constructor(options){
+class Collection {
+	anustart: boolean
+	completedRolls: number
+	id: any
+	promise: Promise<unknown>
+	reject: (reason?: any) => void
+	resolve: (value: unknown) => void
+	rolls: Roll[]
+	theme: string
+	
+	constructor(options: CollectionOptions){
 		Object.assign(this,options)
 		this.rolls = options.rolls || []
 		this.completedRolls = 0

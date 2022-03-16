@@ -4,7 +4,7 @@ import { ShadowGenerator } from '@babylonjs/core/Lights/Shadows/shadowGenerator'
 import { Vector3 } from '@babylonjs/core/Maths/math.vector'
 import '@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent'
 import { Scene } from '@babylonjs/core/scene'
-import { DirectionalLightType } from './types'
+import { DirectionalLightType } from '../types'
 
 function createLights(options: { enableShadows: boolean; scene?: Scene }) {
   const { enableShadows = true, scene } = options

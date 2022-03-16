@@ -1,7 +1,7 @@
 //@ts-expect-error vits will take care of this
 import worldWorker from './offscreenCanvas.worker?worker&inline' // using vits.js worker import - this will be compiled away
 import { createUUID } from '../helpers'
-import { DiceOptions, OnMessage, PhysicsWorkerPort, Resize, WorldOffScreenOptions } from './types'
+import { DiceOptions, OnMessage, PhysicsWorkerPort, Resize, WorldOffScreenOptions } from '../types'
 import Dice from './Dice'
 
 class WorldOffScreen {

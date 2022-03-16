@@ -1,14 +1,14 @@
 import { DirectionalLight, HemisphericLight, Mesh, Scene, ShadowGenerator } from "@babylonjs/core"
-import Dice from "../Dice"
+import Dice from "../components/Dice"
 
 type Anustart = boolean
 type AssetPath = string
-type Theme = string
-
-type Sides = number
-type Scale = number
-
 type DiceBuffer = ArrayBufferLike
+type Origin = string
+type Scale = number
+type Sides = number
+type Theme = string
+type Qty = number
 
 export type DiceConfig = {
     anustart: Anustart
@@ -141,11 +141,9 @@ export type InitSceneData = {
 
 export type WorldOffScreenOptions = { 
     canvas: {
-        transferControlToOffscreen: () => OffscreenCanvas
+        transferControlToOffscreen?: () => OffscreenCanvas
     } & HTMLCanvasElement
-    options: {
-
-    }
+    options: WorldConfig
 }
 
 export type InitSceneConfig = {
@@ -181,7 +179,107 @@ export type InitData = {
 
 export type PhysicsConfig = {
     assetPath?: AssetPath
-    origin?: string
+    origin?: Origin
     scale?: number
     startPosition?: number[]
 } & InitDataOptions
+
+export type WorldConfig = {
+    assetPath: AssetPath
+    delay: number
+    enableShadows: boolean 
+    gravity: number
+    id: string
+    offscreen: boolean
+    origin: Origin
+    scale: Scale
+    spinForce: number
+    startingHeight: number
+    theme: Theme
+    throwForce: number
+}
+
+export type DiceRoll = {
+    groupId: number
+    id: number
+    result: number
+    rollId: number 
+    sides: Sides
+    theme: Theme
+    value: number
+}
+
+export type RollResults = {
+    modifier: number
+    qty: Qty
+    rolls: DiceRoll[]
+    side: Sides
+    value: number
+}
+
+export type Mods = {
+    expr: {
+        type: "number"
+        value: number
+    }
+    highlow: "h"
+    type: "keep"
+}
+
+export type Roll = {
+    collectionId: number
+    groupId: number
+    id: number
+    rollId: number
+    sides: Sides
+    theme: Theme
+    value: number
+}
+
+export type Notation = {
+    id: number
+    mods: Mods[]
+    qty: Qty
+    rolls: Roll[]
+    sides: Sides
+    value: number
+}
+
+export type Collection = {
+    anustart: boolean
+    completedRolls: number
+    id: number
+    notation: Notation[]
+    promise: Promise<unknown>
+	resolve: (value: unknown) => void
+	reject: (reason?: any) => void
+    rolls: Roll[]
+    theme?: Theme
+}
+
+export type CollectionOptions = { 
+    anustart?: boolean; 
+    id?: number; 
+    notation?: Notation; 
+    rolls?: Roll[] 
+    theme?: Theme; 
+}
+
+export type RollGroup = { 
+    theme: Theme
+    groupId: number
+    qty: Qty
+    rollId: number
+    id: number
+    sides: Sides
+    rolls: {} | {
+        [key: number]: {
+            collectionId: number
+            id: number
+            modifier?: number 
+            value: number, 
+        }
+    }
+    value: number
+    modifier?: number
+}

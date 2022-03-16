@@ -5,7 +5,7 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode'
 import { Vector3 } from '@babylonjs/core/Maths/math.vector'
 
-import { DiceBoxConfig, DiceBoxCreateOptions, DiceBoxDefaultOptions, DiceBoxOptions } from './types'
+import { DiceBoxConfig, DiceBoxCreateOptions, DiceBoxDefaultOptions, DiceBoxOptions } from '../types'
 
 const defaultOptions: DiceBoxDefaultOptions = {
   aspect: 300 / 150,
